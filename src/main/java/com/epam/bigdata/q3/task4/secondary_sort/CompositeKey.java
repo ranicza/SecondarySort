@@ -32,11 +32,11 @@ public class CompositeKey implements Writable, WritableComparable<CompositeKey>{
 	}
 	
 	public int compareTo(CompositeKey o) {
-		int iPinyouIdCmp = iPinyouId.compareToIgnoreCase(o.getiPinyouId());
+		int iPinyouIdCmp = iPinyouId.compareToIgnoreCase(o.iPinyouId);
 		if (iPinyouIdCmp != 0) {
 			return iPinyouIdCmp;
 		}		
-		return Long.compare(timestamp, o.getTimestamp());
+		return Long.compare(timestamp, o.timestamp);
 	}
 
 	public Long getTimestamp() {
