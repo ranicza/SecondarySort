@@ -14,6 +14,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.Counter;
+import org.apache.hadoop.mapreduce.Counters;
 
 
 public class MRJob {
@@ -21,11 +23,11 @@ public class MRJob {
 	public static final String USAGE_ERROR = "Usage error: <in> <out>";
 	public static final String JOB_NAME = "MRJOb";
 	
-	public static class Map extends Mapper<LongWritable, Text, CompositeKey, Text> {
+	public static class Map extends Mapper<Object, Text, CompositeKey, Text> {
 		private Text content = new Text();
 		private CompositeKey comKey = new CompositeKey();
 		
-		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			String line = value.toString();			
 			String[] tokens = line.split("\\s+");
 			content.set(line);
@@ -33,17 +35,19 @@ public class MRJob {
 			System.out.println("iPinyouId: " + tokens[2]);
 			System.out.println("timestamp: " + tokens[1]);
 			
-			comKey.setiPinyouId(tokens[1]);
-			comKey.setTimestamp(Long.parseLong(tokens[2]));
+			comKey.setiPinyouId(tokens[2]);
+			comKey.setTimestamp(Long.parseLong(tokens[1]));
 			
 			context.write(comKey, content);
 		}		
 	}
 	
 	public static class Reduce extends Reducer<CompositeKey, Text, NullWritable, Text> {
-
+		int max = 0;
+		
 		public void reduce(CompositeKey key, Iterable<Text> values, Context context) {	
 			String line = null;
+			String iPinyouId = null;
 			int streamId = 0;
 			int siteImpressionSum = 0;
 			
@@ -53,8 +57,17 @@ public class MRJob {
 					
 					line = val.toString();
 					streamId = Integer.parseInt(line.substring(line.length()-1));
+					iPinyouId = val.toString().split("\\s+")[2];
 					if (streamId == 1) {
 						siteImpressionSum++;
+						//context.getCounter("Dynamiccounter", key.getiPinyouId()).increment(1);
+					}
+					
+					context.getCounter("SiteImpresisonCunter", key.getiPinyouId()).setValue(siteImpressionSum);
+					
+					if (siteImpressionSum >= max) {
+						max = siteImpressionSum;
+						context.getCounter("SiteImpresisonCunter", key.getiPinyouId()).setValue(siteImpressionSum);
 					}
 				}			
 
@@ -97,6 +110,17 @@ public class MRJob {
 		
 		boolean status = job.waitForCompletion(true);
 		
+//        Counters counters = job.getCounters();
+//		
+//
+//        //System.out.println("iPinyou ID with the biggest ammount of site-impression :");
+//        for (Counter counter : job.getCounters().getGroup("SiteImpresisonCunter")) {
+//        	 // System.out.println("iPinyou ID: " + counter.getName() + ", the biggest amount of site impression: " + counter.getValue());
+//            if (Long.compare(counter.getValue(), maxCount) == 0 ) {
+//            	//&& !counter.getName().equalsIgnoreCase("null")
+//                System.out.println("User with iPinyouId: " + counter.getName() + " amount: " + counter.getValue());
+//            }
+//        }
 		System.exit(status ? 0 : 1);
 	}
 	
