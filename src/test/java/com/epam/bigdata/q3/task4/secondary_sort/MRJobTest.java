@@ -14,9 +14,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class MRJobTest {
-	  MapDriver<Object, Text, CompositeKey, Text> mapDriver;
+	  MapDriver<LongWritable, Text, CompositeKey, Text> mapDriver;
 	    ReduceDriver<CompositeKey, Text, NullWritable, Text> reduceDriver;
-	    MapReduceDriver<Object, Text, CompositeKey, Text, NullWritable, Text> mapReduceDriver;
+	    MapReduceDriver<LongWritable, Text, CompositeKey, Text, NullWritable, Text> mapReduceDriver;
 
 	    private String input1 = "c49b9354a84ce183eb4697df07298d46	20130606001907469	VhkSLxSELTuOkGn	Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729)	27.36.3.*	216	222	3	tMxYQ19aM98	a0ab67bbe87f2e024338b093856580	null	LV_1001_LDVi_LD_ADX_1	300	250	0	0	100	00fccc64a1ee2809348509b7ac2a97a5	241	3427	282825712806	0";
 	    private String input2 = "2a72c8727a42de2ceaaaf8b17d7654d5	20130606001907462	VhkSLxSELTuOkGn	Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729)	27.36.3.*	216	222	3	tMxYQ19aM98	a0ab67bbe87f2e024338b093856580	null	LV_1001_LDVi_LD_ADX_2	300	250	0	0	100	00fccc64a1ee2809348509b7ac2a97a5	241	3427	282163094182	0";
