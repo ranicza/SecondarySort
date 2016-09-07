@@ -7,13 +7,14 @@ import java.io.IOException;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
-public class CompositeKey implements Writable, WritableComparable<CompositeKey>{
-	
+public class CompositeKey implements Writable, WritableComparable<CompositeKey> {
+
 	private Long timestamp;
 	private String iPinyouId;
-	
-	public CompositeKey() {}
-	
+
+	public CompositeKey() {
+	}
+
 	public CompositeKey(String iPinyouId, Long timestamp) {
 		this.iPinyouId = iPinyouId;
 		this.timestamp = timestamp;
@@ -22,20 +23,20 @@ public class CompositeKey implements Writable, WritableComparable<CompositeKey>{
 	public void write(DataOutput out) throws IOException {
 		out.writeUTF(iPinyouId);
 		out.writeLong(timestamp);
-		
+
 	}
-	
+
 	public void readFields(DataInput in) throws IOException {
 		iPinyouId = in.readUTF();
 		timestamp = in.readLong();
-		
+
 	}
-	
+
 	public int compareTo(CompositeKey o) {
 		int iPinyouIdCmp = iPinyouId.compareToIgnoreCase(o.iPinyouId);
 		if (iPinyouIdCmp != 0) {
 			return iPinyouIdCmp;
-		}		
+		}
 		return Long.compare(timestamp, o.timestamp);
 	}
 
@@ -90,6 +91,5 @@ public class CompositeKey implements Writable, WritableComparable<CompositeKey>{
 	public String toString() {
 		return "CompositeKey [timestamp=" + timestamp + ", iPinyouId=" + iPinyouId + "]";
 	}
-
 
 }
