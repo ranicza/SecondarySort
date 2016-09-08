@@ -15,14 +15,12 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.Counter;
-import org.apache.hadoop.mapreduce.Counters;
 
 public class MRJob {
 
 	public static final String DELIMETER = "\\s+";
 	public static final String USAGE_ERROR = "Usage error: <in> <out>";
 	public static final String JOB_NAME = "MRJOb";
-	public static final String COUNTER_GROUP = "SiteImpressionCounter";
 	public static final String NULL = "null";
 
 	public static class Map extends Mapper<LongWritable, Text, CompositeKey, Text> {
@@ -43,29 +41,29 @@ public class MRJob {
 
 	public static class Reduce extends Reducer<CompositeKey, Text, NullWritable, Text> {
 		private long max = 0;
-		private String iPinyouId;
 
 		public void reduce(CompositeKey key, Iterable<Text> values, Context context) {
-			String line = null;
 
 			int streamId = 0;
-			int siteImpressionSum = 0;
+			long siteImpressionSum = 0;
 
 			try {
 				for (Text val : values) {
 					context.write(NullWritable.get(), val);
 
-					line = val.toString();
+					String line = val.toString();
 					streamId = Integer.parseInt(line.substring(line.length() - 1));
-					if (streamId == 1) {
+					if (streamId == StreamIdCounter.UNIT.getStreamId()) {
 						siteImpressionSum++;
 					}
 				}
 
-				if (siteImpressionSum > max) {
+				if (siteImpressionSum > max && !key.getiPinyouId().equalsIgnoreCase(NULL)) {
 					max = siteImpressionSum;
-					iPinyouId = key.getiPinyouId();
-					context.getCounter(COUNTER_GROUP, iPinyouId).setValue(siteImpressionSum);
+
+					Counter siteImpressionCounter = context.getCounter(StreamIdCounter.class.getName(),
+							key.getiPinyouId());
+					siteImpressionCounter.setValue(Math.max(max, siteImpressionCounter.getValue()));
 				}
 
 			} catch (Exception e) {
@@ -75,6 +73,9 @@ public class MRJob {
 	}
 
 	public static void main(String[] args) throws Exception {
+		String iPinyouId = null;
+		long max = 0;
+
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 
@@ -107,17 +108,15 @@ public class MRJob {
 
 		boolean status = job.waitForCompletion(true);
 
-		String iPinyouId = "";
-		long max = 0;
-
-		for (Counter counter : job.getCounters().getGroup(COUNTER_GROUP)) {
-			if (counter.getValue() > max && !counter.getName().equalsIgnoreCase(NULL)) {
+		for (Counter counter : job.getCounters().getGroup(StreamIdCounter.class.getName())) {
+			if (counter.getValue() > max) {
 				max = counter.getValue();
 				iPinyouId = counter.getName();
 			}
 		}
 
 		System.out.println("iPinyouId: " + iPinyouId + ", site-impression counter: " + max);
+
 		System.exit(status ? 0 : 1);
 	}
 
